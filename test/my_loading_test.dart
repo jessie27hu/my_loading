@@ -1,62 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:mockito/mockito.dart';
 import 'package:my_loading/my_loading.dart';
 
-class MockBuildContext extends Mock implements BuildContext {}
-
 void main() {
-  late BuildContext context;
-  setUp(() {
-    //初始化loadingManager
-    context = MockBuildContext();
-    LoadingManager.initialize(context: context);
-  });
-
-  tearDown(() {
-    //清理
-  });
-
-  test('LoadingManager initialize', () {
-    expect(LoadingManager.instance, isNotNull);
-  });
-
   group('DefaultIndicator', () {
     testWidgets('build method returns CircularProgressIndicator',
         (widgetTester) async {
       final indicator = DefaultIndicator();
-      await widgetTester.pumpWidget(MaterialApp(
-        home: Scaffold(body: Builder(builder: (BuildContext innerContext) {
-          return indicator.build(innerContext);
-        })),
-      ));
+      await widgetTester
+          .pumpWidget(Builder(builder: (BuildContext innerContext) {
+        return indicator.build(innerContext);
+      }));
       //查找默认loading样式的CircularProgressIndicator
       final progressIndicatorFinder = find.byType(CircularProgressIndicator);
       //断言找到了对应的控件
       expect(progressIndicatorFinder, findsOneWidget);
     });
 
-    testGoldens('build method returns CircularProgressIndicator size',
+    testWidgets('build method returns CircularProgressIndicator size',
         (WidgetTester widgetTester) async {
       const double expectedSize = 50.0;
       final indicator = DefaultIndicator(size: expectedSize);
-      await widgetTester.pumpWidgetBuilder(RepaintBoundary(
-        child: Builder(builder: (context) {
-          return indicator.build(context);
-        }),
-      ));
+      await widgetTester
+          .pumpWidget(Builder(builder: (BuildContext innerContext) {
+        return indicator.build(innerContext);
+      }));
 
-      //等待小部件渲染完毕
-      await Future.delayed(const Duration(seconds: 1));
-      //查找类型为DefaultIndicator的控件
-      final defaultIndicatorFind = find.byType(DefaultIndicator);
+      //查找类型为CircularProgressIndicator的控件
+      final defaultIndicatorFind = find.byType(CircularProgressIndicator);
       //确保找到了控件
       if (defaultIndicatorFind.evaluate().isEmpty) {
         fail('Fail to find DefaultIndicator');
       }
-      await expectLater(defaultIndicatorFind,
-          matchesGoldenFile('golden/circular_progress_indicator.png'));
+      //获取控件的大小
+      final progressIndicatorSize = widgetTester.getSize(defaultIndicatorFind);
+      //断言控件的大小是否和预期一致
+      expect(progressIndicatorSize.width, expectedSize);
+      expect(progressIndicatorSize.height, expectedSize);
+    });
+  });
+
+  group('LoadingManager', () {
+    test('Singleton pattern', () {
+      //Get two instances, they should be the same
+      final manager1 = LoadingManager.instance;
+      final manager2 = LoadingManager.instance;
+
+      expect(manager1, equals(manager2));
+    });
+
+    testWidgets('show and hide loading indicator', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              LoadingManager.initialize(context: context);
+              return Container();
+            },
+          ),
+        ),
+      );
+      //先验证不可见
+      expect(find.byType(UnconstrainedBox), findsNothing);
+      //点击按钮，触发显示loading
+      LoadingManager.instance.show();
+      //await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+      // 等待一段时间，确保加载指示器有时间进行渲染和显示
+      await tester.pump(const Duration(seconds: 2));
+      //验证loading显示
+      expect(find.byType(UnconstrainedBox), findsOneWidget);
+      LoadingManager.instance.hide();
+      await tester.pump(const Duration(seconds: 2));
+      //验证loading隐藏
+      expect(find.byType(UnconstrainedBox), findsNothing);
     });
   });
 }

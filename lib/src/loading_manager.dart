@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'loading_indicator.dart';
 
 class LoadingManager {
@@ -28,13 +27,16 @@ class LoadingManager {
   ///显示loading
   ///indicator为空时使用默认的loading样式
   ///你也可以自己实现LoadingIndicator
-  void show({LoadingIndicator? indicator}) {
+  Future<void> show({LoadingIndicator? indicator}) async {
     indicator ??= DefaultIndicator();
+
     if (_context == null) {
       return;
     }
-    _overlayEntry =
-        OverlayEntry(builder: (context) => indicator!.build(context));
+    _overlayEntry = OverlayEntry(
+      maintainState: false,
+      builder: (context) => indicator!.build(context),
+    );
 
     try {
       Overlay.of(_context!).insert(_overlayEntry);
@@ -46,5 +48,6 @@ class LoadingManager {
   ///隐藏loading
   void hide() {
     _overlayEntry.remove();
+    _overlayEntry.dispose();
   }
 }

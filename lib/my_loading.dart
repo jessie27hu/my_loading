@@ -9,6 +9,8 @@ export 'src/loading_manager.dart';
 //包含使用指南
 part 'readme.md';
 
+
+
 ///示例用法
 ///void showExample(BuildContext context) {
 /// 初始化loading
