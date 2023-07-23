@@ -1,7 +1,9 @@
+
 name: my_loading
 description: A new Flutter package project.
 version: 1.0.0
-homepage:
+homepage: https://github.com/jessie27hu/my_loading
+repository: https://github.com/jessie27hu/my_loading
 
 environment:
   sdk: '>=3.0.2 <4.0.0'
